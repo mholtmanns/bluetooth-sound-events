@@ -2,13 +2,17 @@
 
 import os
 import sys
+import subprocess
 import signal
 import logging
 import logging.handlers
 import dbus
 import dbus.service
 import dbus.mainloop.glib
-import gobject
+
+# gobject is deprecated on newer versions of Raspbian, use PyGObject instead
+# Check README for added/changed requirements
+from gi.repository import GLib as gobject
 
 LOG_LEVEL = logging.INFO
 LOG_FILE = "/dev/log"
@@ -24,7 +28,13 @@ def interface_change(object_path, properties, member):
     CMDAction = "Connect" if member == "InterfacesAdded" else "Disconnect"
     cmd = ("%s/play-event.sh %s %s" % (SCRIPT_PATH, CMDAction, SCRIPT_PATH))
     logger.info("CMDAction - %s, cmd - %s" % (CMDAction, cmd))
-    os.system(cmd)
+    
+    # Prefer using subprocess.call() over os.system(cmd)
+    # It is possible to run into issues when this python function is called from the service
+    # Then the group membership might be incorrect and subsequently the call to mpg123 will
+    # cause a segmentation fault. To address this we make sure the correct user environment
+    # is set through XDG_RUNTIME_DIR
+    subprocess.call([cmd], shell=True, env={'XDG_RUNTIME_DIR': '/run/user/{}'.format(os.getuid())})
 
 def shutdown(signum, frame):
     mainloop.quit()
