@@ -25,7 +25,7 @@ The code changes are minimal. Beside replacing the deprecated `gobject` by `GLib
 - Add code to optionally enable/disable a LED on a BT event (using `GPIO`)
 - Move to Python 3
 
-## Original README:
+## Original README from Pivek's project:
 
 Add new functionalities:
 - Sound on boot (when A2DP sink into Pulseaudio is ready)
